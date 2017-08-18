@@ -1,11 +1,12 @@
+import os
 import json
 from pprint import pprint
 
 import pymongo
 import pygraphviz
+import crayons
 
-
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(os.environ['MONGO_URI'])
 
 db = client['literature']
 
@@ -54,9 +55,15 @@ def author_id(s):
 
 def list_articles():
     for a in db.articles.find():
-        pprint(a)
-
-
+        print()
+        print('title:   ' + crayons.blue('{}'.format(a['title']), bold = True))
+        print('id:      {}'.format(str(a['_id'])))
+        print('notes:   {}'.format(a.get('notes','')))
+        print('year:    {}'.format(a.get('year',None)))
+        print('authors:')
+        for a_id in a['authors']:
+            author = db.authors.find_one({'_id': a_id})
+            print('         {}'.format(author['name']))
 
 def plot(filt):
 
@@ -75,7 +82,7 @@ def plot(filt):
         for b in a.get('references', []):
             g.add_edge(str(a['_id']), str(b))
 
-    g.layout()
+    g.layout(args="-Goverlap=false")
     g.draw('articles.png')
 
 
