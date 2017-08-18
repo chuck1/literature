@@ -54,13 +54,13 @@ def author_id(s):
 
 def list_articles():
     for a in db.articles.find():
-        print('{} {}'.format(a['_id'], a['title']))
+        pprint(a)
 
 
 
 def plot(filt):
 
-    c = db.articles.find(filt)
+    c = list(db.articles.find(filt))
     
     g = pygraphviz.AGraph(directed=True)
 
@@ -70,10 +70,10 @@ def plot(filt):
         for author_id in a['authors']:
             author = db.authors.find_one({'_id': author_id})
             g.add_edge(author['name'], str(a['_id']))
-        
+    
     for a in c:
         for b in a.get('references', []):
-            g.add_edge(str(a['_id']), str(b['_id']))
+            g.add_edge(str(a['_id']), str(b))
 
     g.layout()
     g.draw('articles.png')
