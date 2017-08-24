@@ -5,6 +5,7 @@ from pprint import pprint
 import pymongo
 import pygraphviz
 import crayons
+import bson
 
 client = pymongo.MongoClient(os.environ['MONGO_URI'])
 
@@ -18,9 +19,7 @@ def read_articles():
             author = db.authors.find_one({'name': author_name})
             
             if author is None:
-            
                 r = db.authors.insert({'name':author_name})
-
                 author = db.authors.find_one({'name': author_name})
 
             print(author)
@@ -64,6 +63,14 @@ def list_articles():
         for a_id in a['authors']:
             author = db.authors.find_one({'_id': a_id})
             print('         {}'.format(author['name']))
+        print('references:')
+        for a_id in a.get('references',[]):
+            reference = db.articles.find_one({'_id': a_id})
+            assert reference
+            print('         {}'.format(crayons.yellow(reference['title'], bold = True)))
+
+def add_reference(ida, idb):
+    db.articles.update({"_id": bson.objectid.ObjectId(ida)}, {"$addToSet": {"references": bson.objectid.ObjectId(idb)}})
 
 def plot(filt):
 
